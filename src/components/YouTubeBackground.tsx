@@ -1,21 +1,35 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import clsx from "clsx";
 
 interface YouTubeBackgroundProps {
   videoId: string;
   playlistId?: string;
 }
 
+const MOODS = [
+  { id: "calm", label: "静谧", videoId: "hjKO0d_umLc", color: "bg-black/50" },
+  { id: "energetic", label: "活力", videoId: "jfKfPfyJRdk", color: "bg-blue-900/30" },
+  { id: "nature", label: "自然", videoId: "vHdxBa0brlA", color: "bg-emerald-900/30" },
+];
+
 export default function YouTubeBackground({
-  videoId,
+  videoId: defaultId,
   playlistId,
 }: YouTubeBackgroundProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [currentMood, setCurrentMood] = useState(MOODS[0]);
   const [isReady, setIsReady] = useState(false);
+  const playerRef = useRef<any>(null);
 
   useEffect(() => {
-    // Load YouTube IFrame API
+    // 动态更新 player
+    if (playerRef.current && playerRef.current.loadVideoById) {
+      playerRef.current.loadVideoById(currentMood.videoId);
+      return;
+    }
+
     if (!(window as unknown as Record<string, unknown>).YT) {
       const tag = document.createElement("script");
       tag.src = "https://www.youtube.com/iframe_api";
@@ -24,94 +38,44 @@ export default function YouTubeBackground({
 
     const onReady = () => {
       if (!containerRef.current) return;
-
       const playerDiv = document.createElement("div");
       playerDiv.id = "yt-bg-player";
       containerRef.current.appendChild(playerDiv);
 
-      const YT = (window as unknown as Record<string, unknown>).YT as {
-        Player: new (
-          el: string,
-          config: Record<string, unknown>
-        ) => Record<string, unknown>;
-      };
-
-      new YT.Player("yt-bg-player", {
-        videoId,
-        playerVars: {
-          autoplay: 1,
-          mute: 1,
-          controls: 0,
-          showinfo: 0,
-          modestbranding: 1,
-          loop: 1,
-          playlist: playlistId
-            ? undefined
-            : videoId,
-          list: playlistId || undefined,
-          listType: playlistId ? "playlist" : undefined,
-          rel: 0,
-          iv_load_policy: 3,
-          disablekb: 1,
-          fs: 0,
-          playsinline: 1,
-          origin: typeof window !== "undefined" ? window.location.origin : "",
-        },
+      const YT = (window as unknown as Record<string, unknown>).YT as any;
+      playerRef.current = new YT.Player("yt-bg-player", {
+        videoId: currentMood.videoId,
+        playerVars: { autoplay: 1, mute: 1, loop: 1, controls: 0, modestbranding: 1, playsinline: 1 },
         events: {
-          onReady: (event: { target: { playVideo: () => void } }) => {
-            event.target.playVideo();
-            setIsReady(true);
-          },
-          onStateChange: (event: { data: number; target: { playVideo: () => void } }) => {
-            // If video ends and no playlist, restart
-            if (event.data === 0 && !playlistId) {
-              event.target.playVideo();
-            }
-          },
+          onReady: (e: any) => { e.target.playVideo(); setIsReady(true); },
         },
       });
     };
 
-    // Check if API is already loaded
-    if ((window as unknown as Record<string, unknown>).YT && (window as unknown as { YT: { Player: unknown } }).YT.Player) {
-      onReady();
-    } else {
-      (window as unknown as Record<string, () => void>).onYouTubeIframeAPIReady = onReady;
-    }
-
-    return () => {
-      (window as unknown as Record<string, undefined>).onYouTubeIframeAPIReady = undefined;
-    };
-  }, [videoId, playlistId]);
+    if ((window as unknown as Record<string, unknown>).YT) onReady();
+    else (window as unknown as any).onYouTubeIframeAPIReady = onReady;
+  }, [currentMood]);
 
   return (
-    <div
-      ref={containerRef}
-      className="fixed inset-0 -z-10 overflow-hidden pointer-events-none"
-      style={{
-        opacity: isReady ? 1 : 0,
-        transition: "opacity 1.5s ease-in",
-      }}
-    >
-      <style>{`
-        #yt-bg-player {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          min-width: 100vw;
-          min-height: 100vh;
-          width: 177.78vh; /* 16:9 aspect ratio */
-          height: 56.25vw;
-          transform: translate(-50%, -50%);
-        }
-        #yt-bg-player iframe {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-        }
-      `}</style>
+    <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+      <div ref={containerRef} style={{ opacity: isReady ? 1 : 0, transition: "opacity 1s" }} />
+      <div className={clsx("absolute inset-0 transition-colors duration-1000", currentMood.color)} />
+      
+      {/* 氛围控制面板 */}
+      <div className="absolute bottom-6 left-6 z-20 pointer-events-auto flex gap-2">
+        {MOODS.map((mood) => (
+          <button
+            key={mood.id}
+            onClick={() => setCurrentMood(mood)}
+            className={clsx(
+              "px-3 py-1 rounded-full text-[10px] tracking-wider transition-all border",
+              currentMood.id === mood.id ? "bg-white/20 border-white/40 text-white" : "bg-black/20 border-white/10 text-white/50 hover:bg-white/10"
+            )}
+          >
+            {mood.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

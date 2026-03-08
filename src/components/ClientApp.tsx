@@ -229,7 +229,8 @@ export default function ClientApp({ styles }: ClientAppProps) {
         <div className="flex w-full max-w-lg flex-col items-center">
           {!hasStarted ? (
             <div className="flex flex-col items-center gap-6 animate-fade-in">
-              <TaskLabel onTaskChange={setCurrentTask} />
+              {/* 移除 TaskLabel */}
+              <div className="h-6" />
 
               <Timer
                 timeLeft={pomodoro.timeLeft}
@@ -252,7 +253,7 @@ export default function ClientApp({ styles }: ClientAppProps) {
             </div>
           ) : (
             <div className="flex flex-col items-center gap-5 sm:gap-6 animate-fade-in">
-              <TaskLabel onTaskChange={setCurrentTask} />
+              <div className="h-6" /> 
 
               {/* Phase tabs */}
               <div className="flex items-center gap-1 rounded-full border border-white/[0.06] bg-white/[0.03] p-1 backdrop-blur-sm">
