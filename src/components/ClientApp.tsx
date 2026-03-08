@@ -7,7 +7,7 @@ import { useAudioPlayer } from "@/hooks/useAudioPlayer";
 import { usePomodoro, Phase } from "@/hooks/usePomodoro";
 import { trackPomodoroComplete } from "@/lib/analytics";
 import { useFocusStats } from "@/hooks/useFocusStats";
-import Timer from "./Timer";
+import Timer, { TimerStyle } from "./Timer";
 import SettingsPanel from "./SettingsPanel";
 import YouTubeBackground from "./YouTubeBackground";
 import clsx from "clsx";
@@ -92,6 +92,12 @@ export default function ClientApp({ styles }: ClientAppProps) {
   const [currentTask, setCurrentTask] = useState("");
   const [isIdle, setIsIdle] = useState(false);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [timerStyle, setTimerStyle] = useState<TimerStyle>(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("timerStyle") as TimerStyle) ?? "ring";
+    }
+    return "ring";
+  });
 
   const audio = useAudioPlayer();
   const completedCountRef = useRef(0);
@@ -286,6 +292,7 @@ export default function ClientApp({ styles }: ClientAppProps) {
                 phase={pomodoro.phase}
                 completedCount={pomodoro.completedCount}
                 onTimerClick={handleStart}
+                timerStyle={timerStyle}
               />
 
               <button
@@ -299,6 +306,25 @@ export default function ClientApp({ styles }: ClientAppProps) {
               >
                 开始专注
               </button>
+
+              {/* Timer style switcher (pre-start) */}
+              <div className="flex items-center gap-1.5">
+                {(["ring", "flip", "minimal", "bar", "breath"] as TimerStyle[]).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => { setTimerStyle(s); localStorage.setItem("timerStyle", s); }}
+                    title={{ ring: "圆环", flip: "翻牌", minimal: "极简", bar: "进度条", breath: "呼吸" }[s]}
+                    className={clsx(
+                      "w-7 h-7 rounded-lg text-[10px] transition-all duration-200 cursor-pointer",
+                      timerStyle === s
+                        ? "bg-white/15 text-white border border-white/20"
+                        : "text-gray-600 hover:text-gray-400 hover:bg-white/5 border border-transparent"
+                    )}
+                  >
+                    {{ ring: "◯", flip: "▦", minimal: "Aa", bar: "≡", breath: "◎" }[s]}
+                  </button>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-5 sm:gap-6 animate-fade-in">
@@ -337,6 +363,7 @@ export default function ClientApp({ styles }: ClientAppProps) {
                 phase={pomodoro.phase}
                 completedCount={pomodoro.completedCount}
                 onTimerClick={handlePauseResume}
+                timerStyle={timerStyle}
               />
 
               <div
@@ -399,6 +426,31 @@ export default function ClientApp({ styles }: ClientAppProps) {
                     </svg>
                   )}
                 </button>
+              </div>
+
+              {/* Timer style switcher */}
+              <div
+                className={clsx(
+                  "flex items-center gap-1.5",
+                  "transition-opacity duration-700",
+                  isIdle ? "opacity-0 pointer-events-none" : "opacity-100"
+                )}
+              >
+                {(["ring", "flip", "minimal", "bar", "breath"] as TimerStyle[]).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => { setTimerStyle(s); localStorage.setItem("timerStyle", s); }}
+                    title={{ ring: "圆环", flip: "翻牌", minimal: "极简", bar: "进度条", breath: "呼吸" }[s]}
+                    className={clsx(
+                      "w-7 h-7 rounded-lg text-[10px] transition-all duration-200 cursor-pointer",
+                      timerStyle === s
+                        ? "bg-white/15 text-white border border-white/20"
+                        : "text-gray-600 hover:text-gray-400 hover:bg-white/5 border border-transparent"
+                    )}
+                  >
+                    {{ ring: "◯", flip: "▦", minimal: "Aa", bar: "≡", breath: "◎" }[s]}
+                  </button>
+                ))}
               </div>
 
               <p
