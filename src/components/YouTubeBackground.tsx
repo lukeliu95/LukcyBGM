@@ -4,33 +4,36 @@ import { useEffect, useRef, useState } from "react";
 
 interface YouTubeBackgroundProps {
   videoId: string;
-  playlistId?: string;
+  onError?: () => void;
 }
 
-export default function YouTubeBackground({ videoId, playlistId }: YouTubeBackgroundProps) {
+export default function YouTubeBackground({ videoId, onError }: YouTubeBackgroundProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<any>(null);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    if (!(window as any).YT) {
-      const tag = document.createElement("script");
-      tag.src = "https://www.youtube.com/iframe_api";
-      document.head.appendChild(tag);
-    }
+    let cancelled = false;
 
-    const onReady = () => {
-      if (!containerRef.current) return;
-      
-      // 动态创建 Player 容器，确保宽高 100%
+    const createPlayer = () => {
+      if (cancelled || !containerRef.current) return;
+      // 清理旧 player
+      if (playerRef.current) {
+        try { playerRef.current.destroy(); } catch {}
+        playerRef.current = null;
+      }
+      // 清理旧 div
+      const old = containerRef.current.querySelector("#yt-bg-player");
+      if (old) old.remove();
+
       const playerDiv = document.createElement("div");
       playerDiv.id = "yt-bg-player";
       playerDiv.style.width = "100%";
       playerDiv.style.height = "100%";
       containerRef.current.appendChild(playerDiv);
 
-      const YT = (window as any).YT;
-      new YT.Player("yt-bg-player", {
-        videoId: videoId,
+      playerRef.current = new (window as any).YT.Player("yt-bg-player", {
+        videoId,
         playerVars: {
           autoplay: 1,
           mute: 1,
@@ -38,20 +41,52 @@ export default function YouTubeBackground({ videoId, playlistId }: YouTubeBackgr
           controls: 0,
           showinfo: 0,
           modestbranding: 1,
-          playsinline: 1, // 关键：移动端内联播放
-          playlist: playlistId ?? videoId,
+          playsinline: 1,
+          playlist: videoId,
         },
         events: {
           onReady: (e: any) => {
-            e.target.playVideo();
-            setIsReady(true);
+            if (!cancelled) {
+              e.target.playVideo();
+              setIsReady(true);
+            }
+          },
+          onError: () => {
+            if (!cancelled) onError?.();
           },
         },
       });
     };
 
-    if ((window as any).YT) onReady();
-    else (window as any).onYouTubeIframeAPIReady = onReady;
+    const waitForYT = () => {
+      // 确保 YT.Player 构造函数完全可用
+      if ((window as any).YT?.Player) {
+        createPlayer();
+      } else {
+        // 加载脚本（如果还没加过）
+        if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+          const tag = document.createElement("script");
+          tag.src = "https://www.youtube.com/iframe_api";
+          document.head.appendChild(tag);
+        }
+        // 等待 API 就绪
+        const prev = (window as any).onYouTubeIframeAPIReady;
+        (window as any).onYouTubeIframeAPIReady = () => {
+          prev?.();
+          createPlayer();
+        };
+      }
+    };
+
+    waitForYT();
+
+    return () => {
+      cancelled = true;
+      if (playerRef.current) {
+        try { playerRef.current.destroy(); } catch {}
+        playerRef.current = null;
+      }
+    };
   }, [videoId]);
 
   return (
@@ -73,11 +108,10 @@ export default function YouTubeBackground({ videoId, playlistId }: YouTubeBackgr
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
-          /* 16:9 cover trick: always fill viewport, crop excess */
           width: 100vw;
-          height: 56.25vw;   /* 100vw × 9/16 */
+          height: 56.25vw;
           min-height: 100vh;
-          min-width: 177.78vh; /* 100vh × 16/9 */
+          min-width: 177.78vh;
           pointer-events: none;
         }
       `}</style>

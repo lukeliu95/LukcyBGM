@@ -73,18 +73,32 @@ export function useAudioPlayer() {
     audio.volume = 0;
     const step = targetVolume / FADE_STEPS;
     const interval = FADE_DURATION / FADE_STEPS;
-    audio.play().catch(() => {});
-    const timer = setInterval(() => {
-      const newVol = audio.volume + step;
-      if (newVol >= targetVolume - 0.01) {
-        audio.volume = targetVolume;
-        clearInterval(timer);
-        fadeTimersRef.current = fadeTimersRef.current.filter((t) => t !== timer);
-      } else {
-        audio.volume = newVol;
-      }
-    }, interval);
-    fadeTimersRef.current.push(timer);
+
+    const startFade = () => {
+      const timer = setInterval(() => {
+        const newVol = audio.volume + step;
+        if (newVol >= targetVolume - 0.01) {
+          audio.volume = targetVolume;
+          clearInterval(timer);
+          fadeTimersRef.current = fadeTimersRef.current.filter((t) => t !== timer);
+        } else {
+          audio.volume = newVol;
+        }
+      }, interval);
+      fadeTimersRef.current.push(timer);
+    };
+
+    // Delay slightly to avoid Chrome power-saving interruption with YouTube video
+    setTimeout(() => {
+      audio.play()
+        .then(() => startFade())
+        .catch(() => {
+          // Retry after delay if first attempt fails
+          setTimeout(() => {
+            audio.play().then(() => startFade()).catch(() => {});
+          }, 1000);
+        });
+    }, 200);
   }, []);
 
   const setupAutoNext = useCallback((audio: HTMLAudioElement) => {

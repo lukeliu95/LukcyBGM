@@ -14,30 +14,30 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || "https://luckybgm.com"
   ),
-  title: "LuckyBGM - AI 生成的专注音乐",
+  title: "LuckyBGM - Focus Music & Pomodoro Timer",
   description:
-    "免费的 AI 背景音乐 + 番茄钟，一个页面进入心流。学习、工作、运动、冥想，选择你的场景。",
+    "Free AI background music + Pomodoro timer. One page to enter flow state. Study, work, exercise, meditate — pick your scene.",
   keywords: [
-    "AI 音乐",
-    "番茄钟",
-    "专注",
-    "学习",
-    "背景音乐",
-    "心流",
-    "白噪音",
+    "AI music",
+    "Pomodoro timer",
+    "focus",
+    "study",
+    "background music",
+    "flow state",
+    "white noise",
     "LuckyBGM",
   ],
   openGraph: {
-    title: "LuckyBGM - AI 生成的专注音乐",
+    title: "LuckyBGM - Focus Music & Pomodoro Timer",
     description:
-      "免费的 AI 背景音乐 + 番茄钟，一个页面进入心流。",
+      "Free AI background music + Pomodoro timer. One page to enter flow state.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "LuckyBGM",
     description:
-      "免费的 AI 背景音乐 + 番茄钟，一个页面进入心流。",
+      "Free AI background music + Pomodoro timer. One page to enter flow state.",
   },
 };
 
@@ -47,7 +47,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN">
+    <html lang="en">
       <head>
         {GA_ID && (
           <>

@@ -28,7 +28,7 @@ export default function VolumeControl({
       <button
         onClick={toggleMute}
         className="text-gray-500 transition-colors hover:text-gray-300 cursor-pointer p-1"
-        aria-label={isMuted ? "取消静音" : "静音"}
+        aria-label={isMuted ? "Unmute" : "Mute"}
       >
         {isMuted ? (
           <svg
@@ -69,7 +69,7 @@ export default function VolumeControl({
         value={volume}
         onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
         className="w-20 sm:w-28 cursor-pointer"
-        aria-label="音量"
+        aria-label="Volume"
       />
     </div>
   );

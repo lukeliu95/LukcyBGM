@@ -54,7 +54,7 @@ interface SharedProps {
 }
 
 function phaseLabel(phase: Phase) {
-  return phase === "focus" ? "专注中" : phase === "shortBreak" ? "短休息" : "长休息";
+  return phase === "focus" ? "Focus" : phase === "shortBreak" ? "Short Break" : "Long Break";
 }
 
 function CompletedDots({ completedCount, t }: { completedCount: number; t: ThemeValue }) {
@@ -89,14 +89,15 @@ function TimerRing({ minutes, seconds, progress, phase, t, completedCount, onTim
   const angle = progress * 2 * Math.PI - Math.PI / 2;
   const dotX = center + r * Math.cos(angle);
   const dotY = center + r * Math.sin(angle);
+  const rd = (v: number) => Math.round(v * 100) / 100;
   const ticks = Array.from({ length: 60 }, (_, i) => {
     const a = (i / 60) * 2 * Math.PI - Math.PI / 2;
     const isMajor = i % 5 === 0;
     const inner = r - (isMajor ? 10 : 6);
     const outer = r - 2;
     return {
-      x1: center + inner * Math.cos(a), y1: center + inner * Math.sin(a),
-      x2: center + outer * Math.cos(a), y2: center + outer * Math.sin(a),
+      x1: rd(center + inner * Math.cos(a)), y1: rd(center + inner * Math.sin(a)),
+      x2: rd(center + outer * Math.cos(a)), y2: rd(center + outer * Math.sin(a)),
       isMajor,
     };
   });

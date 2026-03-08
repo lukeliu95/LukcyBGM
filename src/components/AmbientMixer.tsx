@@ -12,9 +12,9 @@ interface NoiseConfig {
 }
 
 const NOISES: NoiseConfig[] = [
-  { type: "white", label: "白噪音", icon: "〰️", description: "均匀频率，屏蔽干扰" },
-  { type: "brown", label: "棕噪音", icon: "🌊", description: "低沉柔和，深度放松" },
-  { type: "pink", label: "粉噪音", icon: "🌸", description: "自然平衡，助力专注" },
+  { type: "white", label: "White Noise", icon: "〰️", description: "Block distractions" },
+  { type: "brown", label: "Brown Noise", icon: "🌊", description: "Deep relaxation" },
+  { type: "pink", label: "Pink Noise", icon: "🌸", description: "Natural balance" },
 ];
 
 interface ChannelState {

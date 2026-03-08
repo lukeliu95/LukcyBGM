@@ -9,41 +9,41 @@ interface StyleMeta {
 
 const styleMeta: Record<string, StyleMeta> = {
   morning_reading: {
-    name: "晨读",
+    name: "Morning Reading",
     icon: "🌅",
-    description: "轻柔舒缓，适合早起阅读",
+    description: "Soft and soothing, perfect for early reading",
   },
   piano_rain: {
-    name: "钢琴雨声",
+    name: "Piano & Rain",
     icon: "🎹",
-    description: "钢琴与雨声交织，沉浸备考",
+    description: "Piano blended with rain, immersive study",
   },
   lofi: {
     name: "Lo-Fi",
     icon: "🎧",
-    description: "lo-fi beats，轻松专注",
+    description: "Lo-fi beats, easy focus",
   },
   ambient: {
-    name: "环境音",
+    name: "Ambient",
     icon: "🌊",
-    description: "自然白噪音，安静沉浸",
+    description: "Natural white noise, quiet immersion",
   },
   classical: {
-    name: "古典",
+    name: "Classical",
     icon: "🎻",
-    description: "古典乐章，优雅专注",
+    description: "Classical pieces, elegant focus",
   },
   cafe: {
-    name: "咖啡馆",
+    name: "Cafe",
     icon: "☕",
-    description: "咖啡馆氛围，放松学习",
+    description: "Cafe vibes, relaxed study",
   },
 };
 
 const defaultMeta: StyleMeta = {
   name: "",
   icon: "🎵",
-  description: "AI 生成的专注音乐",
+  description: "AI-generated focus music",
 };
 
 export function getStyleMeta(dirName: string): StyleMeta {

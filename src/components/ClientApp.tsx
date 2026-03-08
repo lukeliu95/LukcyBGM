@@ -7,6 +7,7 @@ import { useAudioPlayer } from "@/hooks/useAudioPlayer";
 import { usePomodoro, Phase } from "@/hooks/usePomodoro";
 import { trackPomodoroComplete } from "@/lib/analytics";
 import { useFocusStats } from "@/hooks/useFocusStats";
+import { getRandomVideo } from "@/data/videoSources";
 import Timer, { TimerStyle } from "./Timer";
 import SettingsPanel from "./SettingsPanel";
 import YouTubeBackground from "./YouTubeBackground";
@@ -17,9 +18,9 @@ interface ClientAppProps {
 }
 
 const PHASE_TABS: { key: Phase; label: string }[] = [
-  { key: "focus", label: "专注" },
-  { key: "shortBreak", label: "短休息" },
-  { key: "longBreak", label: "长休息" },
+  { key: "focus", label: "Focus" },
+  { key: "shortBreak", label: "Short Break" },
+  { key: "longBreak", label: "Long Break" },
 ];
 
 const PHASE_TINT: Record<Phase, string> = {
@@ -92,12 +93,16 @@ export default function ClientApp({ styles }: ClientAppProps) {
   const [currentTask, setCurrentTask] = useState("");
   const [isIdle, setIsIdle] = useState(false);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [timerStyle, setTimerStyle] = useState<TimerStyle>(() => {
-    if (typeof window !== "undefined") {
-      return (localStorage.getItem("timerStyle") as TimerStyle) ?? "ring";
-    }
-    return "ring";
-  });
+  const [bgVideo, setBgVideo] = useState<import("@/data/videoSources").VideoSource | null>(null);
+  useEffect(() => { setBgVideo(getRandomVideo()); }, []);
+  const handleVideoError = useCallback(() => {
+    setBgVideo((prev) => getRandomVideo(prev?.id));
+  }, []);
+  const [timerStyle, setTimerStyle] = useState<TimerStyle>("ring");
+  useEffect(() => {
+    const saved = localStorage.getItem("timerStyle") as TimerStyle | null;
+    if (saved) setTimerStyle(saved);
+  }, []);
 
   const audio = useAudioPlayer();
   const completedCountRef = useRef(0);
@@ -188,17 +193,17 @@ export default function ClientApp({ styles }: ClientAppProps) {
     if (!hasStarted) return;
     const phaseLabel =
       pomodoro.phase === "focus"
-        ? "专注中"
+        ? "Focus"
         : pomodoro.phase === "shortBreak"
-          ? "短休息"
-          : "长休息";
+          ? "Short Break"
+          : "Long Break";
     const m = Math.floor(pomodoro.timeLeft / 60);
     const s = pomodoro.timeLeft % 60;
     const time = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
     const taskSuffix = currentTask ? ` - ${currentTask}` : "";
     document.title = `${time} ${phaseLabel}${taskSuffix} | LuckyBGM`;
     return () => {
-      document.title = "LuckyBGM - AI 生成的专注音乐";
+      document.title = "LuckyBGM - Focus Music";
     };
   }, [hasStarted, pomodoro.timeLeft, pomodoro.phase, currentTask]);
 
@@ -239,10 +244,7 @@ export default function ClientApp({ styles }: ClientAppProps) {
 
   return (
     <div className="relative flex min-h-screen flex-col">
-      <YouTubeBackground
-        videoId="hjKO0d_umLc"
-        playlistId="PLLCQp0HkPz--5KFRVoech1gqOe4RDPZkj"
-      />
+      {bgVideo && <YouTubeBackground videoId={bgVideo.id} onError={handleVideoError} />}
       {/* Radial vignette overlay */}
       <div
         className="fixed inset-0 -z-[5] pointer-events-none"
@@ -262,28 +264,33 @@ export default function ClientApp({ styles }: ClientAppProps) {
           isIdle ? "opacity-0 pointer-events-none" : "opacity-100"
         )}
       >
-        <Image
-          src="/logoBGM.png"
-          alt="LuckyBGM"
-          width={120}
-          height={30}
-          className="h-6 w-auto opacity-50"
-          priority
-        />
+        <div className="flex items-center">
+          <Image
+            src="/logoBGM.png"
+            alt="LuckyBGM"
+            width={200}
+            height={42}
+            className="h-10 w-auto"
+            style={{ filter: "invert(1)", mixBlendMode: "screen" }}
+            priority
+          />
+        </div>
         <SettingsPanel
           volume={audio.volume}
           onVolumeChange={audio.setVolume}
           focusMinutes={focusStats.focusMinutes}
           sessionsCompleted={focusStats.sessionsCompleted}
+          timerStyle={timerStyle}
+          onTimerStyleChange={(s) => { setTimerStyle(s); localStorage.setItem("timerStyle", s); }}
         />
       </header>
 
       {/* Main: timer centered */}
       <main className="flex flex-1 flex-col items-center justify-center px-4 pb-8">
-        <div className="flex w-full max-w-lg flex-col items-center">
+        <div className="flex w-full max-w-lg flex-col items-center rounded-3xl bg-black/30 backdrop-blur-sm py-8 px-6">
           {!hasStarted ? (
             <div className="flex flex-col items-center gap-6 animate-fade-in">
-              {/* 移除 TaskLabel */}
+              {/* spacer */}
               <div className="h-6" />
 
               <Timer
@@ -304,27 +311,9 @@ export default function ClientApp({ styles }: ClientAppProps) {
                   "active:scale-95 cursor-pointer"
                 )}
               >
-                开始专注
+                Start Focus
               </button>
 
-              {/* Timer style switcher (pre-start) */}
-              <div className="flex items-center gap-1.5">
-                {(["ring", "flip", "minimal", "bar", "breath"] as TimerStyle[]).map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => { setTimerStyle(s); localStorage.setItem("timerStyle", s); }}
-                    title={{ ring: "圆环", flip: "翻牌", minimal: "极简", bar: "进度条", breath: "呼吸" }[s]}
-                    className={clsx(
-                      "w-7 h-7 rounded-lg text-[10px] transition-all duration-200 cursor-pointer",
-                      timerStyle === s
-                        ? "bg-white/15 text-white border border-white/20"
-                        : "text-gray-600 hover:text-gray-400 hover:bg-white/5 border border-transparent"
-                    )}
-                  >
-                    {{ ring: "◯", flip: "▦", minimal: "Aa", bar: "≡", breath: "◎" }[s]}
-                  </button>
-                ))}
-              </div>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-5 sm:gap-6 animate-fade-in">
@@ -386,7 +375,7 @@ export default function ClientApp({ styles }: ClientAppProps) {
                   )}
                   style={{ "--glow-color": pc.glow } as React.CSSProperties}
                 >
-                  {pomodoro.isRunning ? "暂停" : "继续"}
+                  {pomodoro.isRunning ? "Pause" : "Resume"}
                 </button>
                 <button
                   onClick={handleReset}
@@ -397,7 +386,7 @@ export default function ClientApp({ styles }: ClientAppProps) {
                     "active:scale-95 cursor-pointer"
                   )}
                 >
-                  重置
+                  Reset
                 </button>
                 <button
                   onClick={toggleFullscreen}
@@ -407,8 +396,8 @@ export default function ClientApp({ styles }: ClientAppProps) {
                     "transition-all duration-300 hover:border-white/20 hover:text-white hover:bg-white/[0.08]",
                     "active:scale-95 cursor-pointer"
                   )}
-                  aria-label={isFullscreen ? "退出全屏" : "全屏"}
-                  title={isFullscreen ? "退出全屏 (F)" : "全屏 (F)"}
+                  aria-label={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                  title={isFullscreen ? "Exit Fullscreen (F)" : "Fullscreen (F)"}
                 >
                   {isFullscreen ? (
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -428,31 +417,6 @@ export default function ClientApp({ styles }: ClientAppProps) {
                 </button>
               </div>
 
-              {/* Timer style switcher */}
-              <div
-                className={clsx(
-                  "flex items-center gap-1.5",
-                  "transition-opacity duration-700",
-                  isIdle ? "opacity-0 pointer-events-none" : "opacity-100"
-                )}
-              >
-                {(["ring", "flip", "minimal", "bar", "breath"] as TimerStyle[]).map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => { setTimerStyle(s); localStorage.setItem("timerStyle", s); }}
-                    title={{ ring: "圆环", flip: "翻牌", minimal: "极简", bar: "进度条", breath: "呼吸" }[s]}
-                    className={clsx(
-                      "w-7 h-7 rounded-lg text-[10px] transition-all duration-200 cursor-pointer",
-                      timerStyle === s
-                        ? "bg-white/15 text-white border border-white/20"
-                        : "text-gray-600 hover:text-gray-400 hover:bg-white/5 border border-transparent"
-                    )}
-                  >
-                    {{ ring: "◯", flip: "▦", minimal: "Aa", bar: "≡", breath: "◎" }[s]}
-                  </button>
-                ))}
-              </div>
-
               <p
                 className={clsx(
                   "text-[10px] text-gray-600 tracking-wide",
@@ -460,7 +424,7 @@ export default function ClientApp({ styles }: ClientAppProps) {
                   isIdle ? "opacity-0" : "opacity-100"
                 )}
               >
-                空格 暂停/继续 · R 重置 · F 全屏
+                Space Pause/Resume · R Reset · F Fullscreen
               </p>
             </div>
           )}

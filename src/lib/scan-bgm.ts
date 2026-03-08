@@ -4,7 +4,7 @@ import { MusicStyle, Track } from "@/types";
 import { getStyleMeta } from "@/data/style-meta";
 
 const BGM_DIR = path.join(process.cwd(), "BGM");
-const BGM_PUBLIC_PREFIX = "/bgm";
+const BGM_PUBLIC_PREFIX = "/api/bgm";
 
 export function scanBGMDirectory(): MusicStyle[] {
   if (!fs.existsSync(BGM_DIR)) {

@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "AI Music Flow - AI 生成的专注音乐";
+export const alt = "LuckyBGM - Focus Music & Pomodoro Timer";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -39,7 +39,7 @@ export default function Image() {
             letterSpacing: "-1px",
           }}
         >
-          AI Music Flow
+          LuckyBGM
         </h1>
         <p
           style={{
@@ -48,7 +48,7 @@ export default function Image() {
             margin: "16px 0 0 0",
           }}
         >
-          AI 生成的专注音乐，一个页面进入心流
+          Focus Music & Pomodoro Timer — Enter Flow State
         </p>
         <div
           style={{
@@ -57,7 +57,7 @@ export default function Image() {
             marginTop: "48px",
           }}
         >
-          {["📚 学习专注", "🎹 AI 音乐", "⏱ 番茄钟"].map((item) => (
+          {["📚 Deep Focus", "🎹 AI Music", "⏱ Pomodoro"].map((item) => (
             <div
               key={item}
               style={{
