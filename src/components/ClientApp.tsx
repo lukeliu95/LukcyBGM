@@ -206,14 +206,16 @@ export default function ClientApp({ styles }: ClientAppProps) {
 
       {/* Header: logo left, settings right */}
       <header className="relative z-10 flex items-center justify-between px-4 sm:px-6 pt-4 pb-2">
-        <Image
-          src="/logoBGM.png"
-          alt="LuckyBGM"
-          width={140}
-          height={36}
-          className="h-8 w-auto opacity-80 invert"
-          priority
-        />
+        <div className="flex items-center rounded-full bg-white/10 backdrop-blur-sm border border-white/15 px-4 py-1.5">
+          <Image
+            src="/logoBGM.png"
+            alt="LuckyBGM"
+            width={140}
+            height={36}
+            className="h-7 w-auto opacity-80 invert"
+            priority
+          />
+        </div>
         <SettingsPanel
           volume={audio.volume}
           onVolumeChange={audio.setVolume}
