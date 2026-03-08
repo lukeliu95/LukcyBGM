@@ -4,9 +4,10 @@ import { useEffect, useRef, useState } from "react";
 
 interface YouTubeBackgroundProps {
   videoId: string;
+  playlistId?: string;
 }
 
-export default function YouTubeBackground({ videoId }: YouTubeBackgroundProps) {
+export default function YouTubeBackground({ videoId, playlistId }: YouTubeBackgroundProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isReady, setIsReady] = useState(false);
 
@@ -38,7 +39,7 @@ export default function YouTubeBackground({ videoId }: YouTubeBackgroundProps) {
           showinfo: 0,
           modestbranding: 1,
           playsinline: 1, // 关键：移动端内联播放
-          playlist: videoId,
+          playlist: playlistId ?? videoId,
         },
         events: {
           onReady: (e: any) => {
