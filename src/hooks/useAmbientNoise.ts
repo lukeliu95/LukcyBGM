@@ -64,6 +64,9 @@ export function useAmbientNoise() {
     if (!ctxRef.current) {
       ctxRef.current = new AudioContext();
     }
+    if (ctxRef.current.state === "suspended") {
+      ctxRef.current.resume();
+    }
     return ctxRef.current;
   }, []);
 

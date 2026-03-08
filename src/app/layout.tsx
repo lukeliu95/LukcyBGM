@@ -12,9 +12,9 @@ const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://aimusicflow.com"
+    process.env.NEXT_PUBLIC_SITE_URL || "https://luckybgm.com"
   ),
-  title: "AI Music Flow - AI 生成的专注音乐",
+  title: "LuckyBGM - AI 生成的专注音乐",
   description:
     "免费的 AI 背景音乐 + 番茄钟，一个页面进入心流。学习、工作、运动、冥想，选择你的场景。",
   keywords: [
@@ -25,16 +25,17 @@ export const metadata: Metadata = {
     "背景音乐",
     "心流",
     "白噪音",
+    "LuckyBGM",
   ],
   openGraph: {
-    title: "AI Music Flow - AI 生成的专注音乐",
+    title: "LuckyBGM - AI 生成的专注音乐",
     description:
       "免费的 AI 背景音乐 + 番茄钟，一个页面进入心流。",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI Music Flow",
+    title: "LuckyBGM",
     description:
       "免费的 AI 背景音乐 + 番茄钟，一个页面进入心流。",
   },

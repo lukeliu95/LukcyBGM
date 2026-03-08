@@ -9,8 +9,6 @@ export default function FocusStats({
   focusMinutes,
   sessionsCompleted,
 }: FocusStatsProps) {
-  if (sessionsCompleted === 0 && focusMinutes === 0) return null;
-
   const hours = Math.floor(focusMinutes / 60);
   const mins = focusMinutes % 60;
   const timeStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
