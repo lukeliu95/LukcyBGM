@@ -7,6 +7,7 @@ interface TimerProps {
   totalDuration: number;
   phase: Phase;
   completedCount: number;
+  onTimerClick?: () => void;
 }
 
 const THEME = {
@@ -38,6 +39,7 @@ export default function Timer({
   totalDuration,
   phase,
   completedCount,
+  onTimerClick,
 }: TimerProps) {
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
@@ -74,7 +76,10 @@ export default function Timer({
 
   return (
     <div className="flex flex-col items-center">
-      <div className="relative">
+      <div
+        className={`relative${onTimerClick ? " cursor-pointer transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]" : ""}`}
+        onClick={onTimerClick}
+      >
         <svg
           width={size}
           height={size}
@@ -163,6 +168,13 @@ export default function Timer({
             />
           )}
         </svg>
+
+        {/* Clickable hint ring */}
+        {onTimerClick && (
+          <div className="absolute inset-0 rounded-full opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none">
+            <div className="rounded-full border border-white/10 w-[200px] h-[200px]" />
+          </div>
+        )}
 
         {/* Center content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">

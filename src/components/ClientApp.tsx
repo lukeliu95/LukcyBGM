@@ -8,7 +8,6 @@ import { usePomodoro, Phase } from "@/hooks/usePomodoro";
 import { trackPomodoroComplete } from "@/lib/analytics";
 import { useFocusStats } from "@/hooks/useFocusStats";
 import Timer from "./Timer";
-import TaskLabel from "./TaskLabel";
 import SettingsPanel from "./SettingsPanel";
 import YouTubeBackground from "./YouTubeBackground";
 import clsx from "clsx";
@@ -22,6 +21,12 @@ const PHASE_TABS: { key: Phase; label: string }[] = [
   { key: "shortBreak", label: "短休息" },
   { key: "longBreak", label: "长休息" },
 ];
+
+const PHASE_TINT: Record<Phase, string> = {
+  focus: "rgba(59,130,246,0.07)",
+  shortBreak: "rgba(16,185,129,0.07)",
+  longBreak: "rgba(139,92,246,0.07)",
+};
 
 const PHASE_COLORS: Record<
   Phase,
@@ -85,6 +90,8 @@ export default function ClientApp({ styles }: ClientAppProps) {
   const [hasStarted, setHasStarted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentTask, setCurrentTask] = useState("");
+  const [isIdle, setIsIdle] = useState(false);
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const audio = useAudioPlayer();
   const completedCountRef = useRef(0);
@@ -141,6 +148,34 @@ export default function ClientApp({ styles }: ClientAppProps) {
     document.addEventListener("fullscreenchange", handler);
     return () => document.removeEventListener("fullscreenchange", handler);
   }, []);
+
+  // Idle detection: fade UI after 3s inactivity while running
+  const resetIdle = useCallback(() => {
+    setIsIdle(false);
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    if (hasStarted && pomodoro.isRunning) {
+      idleTimerRef.current = setTimeout(() => setIsIdle(true), 3000);
+    }
+  }, [hasStarted, pomodoro.isRunning]);
+
+  useEffect(() => {
+    if (hasStarted && pomodoro.isRunning) {
+      idleTimerRef.current = setTimeout(() => setIsIdle(true), 3000);
+    } else {
+      setIsIdle(false);
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    }
+    return () => { if (idleTimerRef.current) clearTimeout(idleTimerRef.current); };
+  }, [hasStarted, pomodoro.isRunning]);
+
+  useEffect(() => {
+    window.addEventListener("mousemove", resetIdle);
+    window.addEventListener("touchstart", resetIdle);
+    return () => {
+      window.removeEventListener("mousemove", resetIdle);
+      window.removeEventListener("touchstart", resetIdle);
+    };
+  }, [resetIdle]);
 
   // Browser tab title countdown
   useEffect(() => {
@@ -202,20 +237,33 @@ export default function ClientApp({ styles }: ClientAppProps) {
         videoId="hjKO0d_umLc"
         playlistId="PLLCQp0HkPz--5KFRVoech1gqOe4RDPZkj"
       />
-      <div className="fixed inset-0 -z-[5] bg-black/50" />
+      {/* Radial vignette overlay */}
+      <div
+        className="fixed inset-0 -z-[5] pointer-events-none"
+        style={{ background: "radial-gradient(ellipse at 50% 45%, transparent 20%, rgba(0,0,0,0.72) 100%)" }}
+      />
+      {/* Phase atmospheric tint */}
+      <div
+        className="fixed inset-0 -z-[4] pointer-events-none transition-colors duration-1000"
+        style={{ backgroundColor: PHASE_TINT[pomodoro.phase] }}
+      />
 
       {/* Header: logo left, settings right */}
-      <header className="relative z-10 flex items-center justify-between px-4 sm:px-6 pt-4 pb-2">
-        <div className="flex items-center rounded-full bg-white/10 backdrop-blur-sm border border-white/15 px-4 py-1.5">
-          <Image
-            src="/logoBGM.png"
-            alt="LuckyBGM"
-            width={140}
-            height={36}
-            className="h-7 w-auto opacity-80 invert"
-            priority
-          />
-        </div>
+      <header
+        className={clsx(
+          "relative z-10 flex items-center justify-between px-4 sm:px-6 pt-4 pb-2",
+          "transition-opacity duration-700",
+          isIdle ? "opacity-0 pointer-events-none" : "opacity-100"
+        )}
+      >
+        <Image
+          src="/logoBGM.png"
+          alt="LuckyBGM"
+          width={120}
+          height={30}
+          className="h-6 w-auto opacity-50"
+          priority
+        />
         <SettingsPanel
           volume={audio.volume}
           onVolumeChange={audio.setVolume}
@@ -237,6 +285,7 @@ export default function ClientApp({ styles }: ClientAppProps) {
                 totalDuration={pomodoro.totalDuration}
                 phase={pomodoro.phase}
                 completedCount={pomodoro.completedCount}
+                onTimerClick={handleStart}
               />
 
               <button
@@ -253,10 +302,16 @@ export default function ClientApp({ styles }: ClientAppProps) {
             </div>
           ) : (
             <div className="flex flex-col items-center gap-5 sm:gap-6 animate-fade-in">
-              <div className="h-6" /> 
+              <div className="h-6" />
 
               {/* Phase tabs */}
-              <div className="flex items-center gap-1 rounded-full border border-white/[0.06] bg-white/[0.03] p-1 backdrop-blur-sm">
+              <div
+                className={clsx(
+                  "flex items-center gap-1 rounded-full border border-white/[0.06] bg-white/[0.03] p-1 backdrop-blur-sm",
+                  "transition-opacity duration-700",
+                  isIdle ? "opacity-0 pointer-events-none" : "opacity-100"
+                )}
+              >
                 {PHASE_TABS.map((tab) => (
                   <button
                     key={tab.key}
@@ -281,9 +336,16 @@ export default function ClientApp({ styles }: ClientAppProps) {
                 totalDuration={pomodoro.totalDuration}
                 phase={pomodoro.phase}
                 completedCount={pomodoro.completedCount}
+                onTimerClick={handlePauseResume}
               />
 
-              <div className="flex items-center gap-3 sm:gap-4">
+              <div
+                className={clsx(
+                  "flex items-center gap-3 sm:gap-4",
+                  "transition-opacity duration-700",
+                  isIdle ? "opacity-0 pointer-events-none" : "opacity-100"
+                )}
+              >
                 <button
                   onClick={handlePauseResume}
                   className={clsx(
@@ -339,7 +401,13 @@ export default function ClientApp({ styles }: ClientAppProps) {
                 </button>
               </div>
 
-              <p className="text-[10px] text-gray-600 tracking-wide">
+              <p
+                className={clsx(
+                  "text-[10px] text-gray-600 tracking-wide",
+                  "transition-opacity duration-700",
+                  isIdle ? "opacity-0" : "opacity-100"
+                )}
+              >
                 空格 暂停/继续 · R 重置 · F 全屏
               </p>
             </div>
@@ -347,7 +415,13 @@ export default function ClientApp({ styles }: ClientAppProps) {
         </div>
       </main>
 
-      <footer className="py-3 text-center text-[11px] text-gray-700">
+      <footer
+        className={clsx(
+          "py-3 text-center text-[11px] text-gray-700",
+          "transition-opacity duration-700",
+          isIdle ? "opacity-0" : "opacity-100"
+        )}
+      >
         Powered by LuckyBGM
       </footer>
     </div>
