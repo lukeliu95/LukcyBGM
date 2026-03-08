@@ -40,9 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# audio assets (too large for git)
-BGM/
-public/bgm/
+# audio assets (source files too large for git)
+/BGM/
 public/audio/*.mp3
 
 # dev workflow files

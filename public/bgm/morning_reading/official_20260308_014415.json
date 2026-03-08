@@ -1,0 +1,10 @@
+{
+  "content": "Music generated successfully.",
+  "model": "acemusic/acestep-v1.5-turbo",
+  "usage": {
+    "completion_tokens": 100,
+    "prompt_tokens": 19,
+    "total_tokens": 119
+  },
+  "audio_count": 1
+}
