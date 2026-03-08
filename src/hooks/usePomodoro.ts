@@ -26,6 +26,9 @@ export function usePomodoro({ onPhaseChange }: UsePomodoroOptions = {}) {
   const shortBreakDurationRef = useRef(shortBreakDuration);
   const longBreakDurationRef = useRef(longBreakDuration);
   const completedCountRef = useRef(0);
+  // 保存暂停时专注阶段剩余时间，切回专注时恢复
+  const savedFocusTimeLeftRef = useRef<number | null>(null);
+  const timeLeftRef = useRef(25 * 60);
 
   onPhaseChangeRef.current = onPhaseChange;
   focusDurationRef.current = focusDuration;
@@ -58,6 +61,7 @@ export function usePomodoro({ onPhaseChange }: UsePomodoroOptions = {}) {
 
     intervalRef.current = setInterval(() => {
       setTimeLeft((prev) => {
+        timeLeftRef.current = prev - 1;
         if (prev <= 1) {
           const currentPhase = phaseRef.current;
           let nextPhase: Phase;
@@ -65,6 +69,7 @@ export function usePomodoro({ onPhaseChange }: UsePomodoroOptions = {}) {
           if (currentPhase === "focus") {
             completedCountRef.current += 1;
             setCompletedCount(completedCountRef.current);
+            savedFocusTimeLeftRef.current = null; // 自然完成，清除保存的时间
             nextPhase =
               completedCountRef.current % LONG_BREAK_INTERVAL === 0
                 ? "longBreak"
@@ -90,9 +95,22 @@ export function usePomodoro({ onPhaseChange }: UsePomodoroOptions = {}) {
   const switchPhase = useCallback(
     (newPhase: Phase) => {
       if (isRunning) return;
+
+      // 离开专注阶段时保存当前剩余时间
+      if (phaseRef.current === "focus" && newPhase !== "focus") {
+        savedFocusTimeLeftRef.current = timeLeftRef.current;
+      }
+
       phaseRef.current = newPhase;
       setPhase(newPhase);
-      setTimeLeft(getDurationForPhase(newPhase));
+
+      // 切回专注时恢复保存的时间，否则重置为对应阶段时长
+      if (newPhase === "focus" && savedFocusTimeLeftRef.current !== null) {
+        setTimeLeft(savedFocusTimeLeftRef.current);
+        timeLeftRef.current = savedFocusTimeLeftRef.current;
+      } else {
+        setTimeLeft(getDurationForPhase(newPhase));
+      }
     },
     [getDurationForPhase, isRunning]
   );
@@ -117,6 +135,8 @@ export function usePomodoro({ onPhaseChange }: UsePomodoroOptions = {}) {
     phaseRef.current = "focus";
     setPhase("focus");
     setTimeLeft(focusDurationRef.current);
+    timeLeftRef.current = focusDurationRef.current;
+    savedFocusTimeLeftRef.current = null;
   }, []);
 
   const totalDuration = getDurationForPhase(phase);
