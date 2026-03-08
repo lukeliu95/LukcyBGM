@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import clsx from "clsx";
 
 interface YouTubeBackgroundProps {
   videoId: string;
-  playlistId?: string;
 }
 
 export default function YouTubeBackground({ videoId }: YouTubeBackgroundProps) {
@@ -13,7 +11,7 @@ export default function YouTubeBackground({ videoId }: YouTubeBackgroundProps) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    if (!(window as unknown as Record<string, unknown>).YT) {
+    if (!(window as any).YT) {
       const tag = document.createElement("script");
       tag.src = "https://www.youtube.com/iframe_api";
       document.head.appendChild(tag);
@@ -21,11 +19,15 @@ export default function YouTubeBackground({ videoId }: YouTubeBackgroundProps) {
 
     const onReady = () => {
       if (!containerRef.current) return;
+      
+      // 动态创建 Player 容器，确保宽高 100%
       const playerDiv = document.createElement("div");
       playerDiv.id = "yt-bg-player";
+      playerDiv.style.width = "100%";
+      playerDiv.style.height = "100%";
       containerRef.current.appendChild(playerDiv);
 
-      const YT = (window as unknown as Record<string, unknown>).YT as any;
+      const YT = (window as any).YT;
       new YT.Player("yt-bg-player", {
         videoId: videoId,
         playerVars: {
@@ -33,8 +35,9 @@ export default function YouTubeBackground({ videoId }: YouTubeBackgroundProps) {
           mute: 1,
           loop: 1,
           controls: 0,
+          showinfo: 0,
           modestbranding: 1,
-          playsinline: 1,
+          playsinline: 1, // 关键：移动端内联播放
           playlist: videoId,
         },
         events: {
@@ -46,12 +49,12 @@ export default function YouTubeBackground({ videoId }: YouTubeBackgroundProps) {
       });
     };
 
-    if ((window as unknown as Record<string, unknown>).YT) onReady();
-    else (window as unknown as any).onYouTubeIframeAPIReady = onReady;
+    if ((window as any).YT) onReady();
+    else (window as any).onYouTubeIframeAPIReady = onReady;
   }, [videoId]);
 
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden">
+    <div className="fixed inset-0 -z-10 overflow-hidden bg-black">
       <div
         ref={containerRef}
         className="absolute inset-0 w-full h-full"
@@ -60,13 +63,13 @@ export default function YouTubeBackground({ videoId }: YouTubeBackgroundProps) {
       <div className="absolute inset-0 bg-black/50" />
       <style>{`
         #yt-bg-player {
-          width: 100vw;
-          height: 100vh;
+          width: 100vw !important;
+          height: 100vh !important;
         }
         #yt-bg-player iframe {
-          width: 100vw;
-          height: 100vh;
-          object-fit: cover;
+          width: 100vw !important;
+          height: 100vh !important;
+          object-fit: cover !important;
         }
       `}</style>
     </div>
