@@ -60,16 +60,24 @@ export default function YouTubeBackground({ videoId }: YouTubeBackgroundProps) {
         className="absolute inset-0 w-full h-full"
         style={{ opacity: isReady ? 1 : 0, transition: "opacity 1s" }}
       />
-      <div className="absolute inset-0 bg-black/50" />
       <style>{`
         #yt-bg-player {
-          width: 100vw !important;
-          height: 100vh !important;
+          position: absolute;
+          top: 0; left: 0;
+          width: 100%; height: 100%;
+          pointer-events: none;
         }
         #yt-bg-player iframe {
-          width: 100vw !important;
-          height: 100vh !important;
-          object-fit: cover !important;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          /* 16:9 cover trick: always fill viewport, crop excess */
+          width: 100vw;
+          height: 56.25vw;   /* 100vw × 9/16 */
+          min-height: 100vh;
+          min-width: 177.78vh; /* 100vh × 16/9 */
+          pointer-events: none;
         }
       `}</style>
     </div>
