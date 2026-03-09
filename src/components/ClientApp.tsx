@@ -289,7 +289,7 @@ export default function ClientApp({ styles }: ClientAppProps) {
           isIdle ? "opacity-0 pointer-events-none" : "opacity-100"
         )}
       >
-        <div className="rounded-full bg-white/90 px-5 py-1.5 shadow-sm">
+        <div className="rounded-full bg-white/50 px-5 py-1.5 shadow-sm">
           <Image
             src="/logoBGM.png"
             alt="LuckyBGM"
