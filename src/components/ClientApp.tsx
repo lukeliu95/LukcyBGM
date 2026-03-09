@@ -142,6 +142,22 @@ export default function ClientApp({ styles }: ClientAppProps) {
   const handleStart = () => {
     setHasStarted(true);
     pomodoro.start();
+    // Play BGM directly in click handler — satisfies browser autoplay policy.
+    // useEffect fires after React's async scheduler (gesture context already expired).
+    if (style && !audio.isPlaying) {
+      try {
+        const raw = localStorage.getItem("ambient-mix-v1");
+        const savedMix: Record<string, number> | null = raw ? JSON.parse(raw) : null;
+        // null → no saved mix → default is { bgm: 0.7 }
+        const bgmVol = savedMix === null ? 0.7 : savedMix["bgm"];
+        if (bgmVol !== undefined) {
+          audio.play(style);
+          audio.setVolume(bgmVol);
+        }
+      } catch {
+        audio.play(style);
+      }
+    }
   };
 
   const handlePauseResume = useCallback(() => {

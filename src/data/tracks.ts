@@ -21,10 +21,6 @@ const STYLES: StyleEntry[] = [
   {
     dir: "morning_reading",
     tracks: [
-      { file: "pomodoro_20260309_003453_session1.mp3", duration: 1800 },
-      { file: "pomodoro_20260309_003501_session2.mp3", duration: 1800 },
-      { file: "pomodoro_20260309_003510_session3.mp3", duration: 1800 },
-      { file: "pomodoro_20260309_003519_session4.mp3", duration: 1800 },
       { file: "pomodoro_20260309_092328_session1.mp3", duration: 1800 },
       { file: "pomodoro_20260309_092337_session2.mp3", duration: 1800 },
       { file: "pomodoro_20260309_092346_session3.mp3", duration: 1800 },
