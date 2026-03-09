@@ -113,12 +113,10 @@ export default function AmbientMixer({ pageMode = false, active = false, paused 
     }
   }, [musicPaused, active, paused]);
 
-  // Restore saved mix after hydration (avoids SSR/client className mismatch)
+  // Restore saved mix after hydration; default to BGM on if nothing saved
   useEffect(() => {
     const saved = loadFromStorage();
-    if (Object.keys(saved).length > 0) {
-      setMix(saved);
-    }
+    setMix(Object.keys(saved).length > 0 ? saved : { bgm: 0.7 });
   }, []);
 
   // Persist mix to localStorage whenever it changes
