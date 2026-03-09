@@ -39,9 +39,14 @@ function saveStats(stats: DailyStats) {
 }
 
 export function useFocusStats() {
-  const [stats, setStats] = useState<DailyStats>(loadStats);
+  // Start with zeros to match SSR; restore from localStorage after hydration
+  const [stats, setStats] = useState<DailyStats>({
+    date: getTodayKey(),
+    focusMinutes: 0,
+    sessionsCompleted: 0,
+  });
 
-  // Re-check date on mount (in case user left tab open overnight)
+  // Restore from localStorage after hydration
   useEffect(() => {
     const current = loadStats();
     setStats(current);

@@ -10,6 +10,8 @@ import { useFocusStats } from "@/hooks/useFocusStats";
 import { getRandomVideo } from "@/data/videoSources";
 import Timer, { TimerStyle } from "./Timer";
 import SettingsPanel from "./SettingsPanel";
+import AmbientMixer from "./AmbientMixer";
+import Clock from "./Clock";
 import YouTubeBackground from "./YouTubeBackground";
 import clsx from "clsx";
 
@@ -57,22 +59,24 @@ function playNotificationBeep() {
   if (typeof window === "undefined") return;
   try {
     const ctx = new AudioContext();
-    const oscillator = ctx.createOscillator();
-    const gain = ctx.createGain();
-    oscillator.connect(gain);
-    gain.connect(ctx.destination);
-
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(800, ctx.currentTime);
-
-    gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.05);
-    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.3);
-
-    oscillator.start(ctx.currentTime);
-    oscillator.stop(ctx.currentTime + 0.3);
-
-    setTimeout(() => ctx.close(), 500);
+    const freqs = [700, 900, 1100];
+    const dur = 0.18;
+    const gap = 0.12;
+    freqs.forEach((freq, i) => {
+      const t = ctx.currentTime + i * (dur + gap);
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, t);
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.5, t + 0.02);
+      gain.gain.linearRampToValueAtTime(0, t + dur);
+      osc.start(t);
+      osc.stop(t + dur);
+    });
+    setTimeout(() => ctx.close(), freqs.length * (dur + gap) * 1000 + 300);
   } catch {
     // Web Audio API not available
   }
@@ -92,6 +96,8 @@ export default function ClientApp({ styles }: ClientAppProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentTask, setCurrentTask] = useState("");
   const [isIdle, setIsIdle] = useState(false);
+  const [ambientPaused, setAmbientPaused] = useState(false);
+  const [musicPaused, setMusicPaused] = useState(false);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [bgVideo, setBgVideo] = useState<import("@/data/videoSources").VideoSource | null>(null);
   useEffect(() => { setBgVideo(getRandomVideo()); }, []);
@@ -116,6 +122,9 @@ export default function ClientApp({ styles }: ClientAppProps) {
       completedCountRef.current += 1;
       trackPomodoroComplete(completedCountRef.current);
       focusStatsRef.current.addSession();
+      setMusicPaused(true);
+    } else if (newPhase === "focus") {
+      setMusicPaused(false);
     }
   }, []);
 
@@ -132,23 +141,23 @@ export default function ClientApp({ styles }: ClientAppProps) {
 
   const handleStart = () => {
     setHasStarted(true);
-    if (style) audio.play(style);
     pomodoro.start();
   };
 
   const handlePauseResume = useCallback(() => {
     if (pomodoro.isRunning) {
       pomodoro.pause();
-      audio.pause();
+      setAmbientPaused(true);
     } else {
       pomodoro.resume();
-      audio.resume();
+      setAmbientPaused(false);
     }
-  }, [pomodoro, audio]);
+  }, [pomodoro]);
 
   const handleReset = () => {
     pomodoro.reset();
-    audio.stop();
+    setAmbientPaused(false);
+    setMusicPaused(false);
     completedCountRef.current = 0;
     setHasStarted(false);
   };
@@ -275,14 +284,15 @@ export default function ClientApp({ styles }: ClientAppProps) {
             priority
           />
         </div>
-        <SettingsPanel
-          volume={audio.volume}
-          onVolumeChange={audio.setVolume}
-          focusMinutes={focusStats.focusMinutes}
-          sessionsCompleted={focusStats.sessionsCompleted}
-          timerStyle={timerStyle}
-          onTimerStyleChange={(s) => { setTimerStyle(s); localStorage.setItem("timerStyle", s); }}
-        />
+        <div className="flex items-center gap-3">
+          <Clock />
+          <SettingsPanel
+            focusMinutes={focusStats.focusMinutes}
+            sessionsCompleted={focusStats.sessionsCompleted}
+            timerStyle={timerStyle}
+            onTimerStyleChange={(s) => { setTimerStyle(s); localStorage.setItem("timerStyle", s); }}
+          />
+        </div>
       </header>
 
       {/* Main: timer centered */}
@@ -339,8 +349,8 @@ export default function ClientApp({ styles }: ClientAppProps) {
                       pomodoro.phase === tab.key
                         ? "bg-white/10 text-white"
                         : pomodoro.isRunning
-                          ? "text-gray-700 cursor-not-allowed"
-                          : "text-gray-500 hover:text-gray-300 cursor-pointer"
+                          ? "text-gray-700 group-hover:text-gray-500 cursor-not-allowed"
+                          : "text-gray-500 group-hover:text-gray-300 hover:text-gray-300 cursor-pointer"
                     )}
                   >
                     {tab.label}
@@ -382,7 +392,7 @@ export default function ClientApp({ styles }: ClientAppProps) {
                 <button
                   onClick={handleReset}
                   className={clsx(
-                    "rounded-full px-6 sm:px-7 py-2.5 text-sm text-gray-400",
+                    "rounded-full px-6 sm:px-7 py-2.5 text-sm text-gray-400 group-hover:text-gray-200",
                     "backdrop-blur-md border border-white/[0.08] bg-white/[0.04]",
                     "transition-all duration-300 hover:border-white/20 hover:text-white hover:bg-white/[0.08]",
                     "active:scale-95 cursor-pointer"
@@ -393,7 +403,7 @@ export default function ClientApp({ styles }: ClientAppProps) {
                 <button
                   onClick={toggleFullscreen}
                   className={clsx(
-                    "rounded-full p-2.5 text-gray-400",
+                    "rounded-full p-2.5 text-gray-400 group-hover:text-gray-200",
                     "backdrop-blur-md border border-white/[0.08] bg-white/[0.04]",
                     "transition-all duration-300 hover:border-white/20 hover:text-white hover:bg-white/[0.08]",
                     "active:scale-95 cursor-pointer"
@@ -421,7 +431,7 @@ export default function ClientApp({ styles }: ClientAppProps) {
 
               <p
                 className={clsx(
-                  "text-[10px] text-gray-600 tracking-wide",
+                  "text-[10px] text-gray-600 group-hover:text-gray-400 tracking-wide",
                   "transition-opacity duration-700",
                   isIdle ? "opacity-0" : "opacity-100"
                 )}
@@ -430,6 +440,15 @@ export default function ClientApp({ styles }: ClientAppProps) {
               </p>
             </div>
           )}
+
+          {/* Ambient mixer — page level, controls visible on hover */}
+          <div className={clsx(
+            "relative z-10 w-72 mx-auto mt-4",
+            "transition-opacity duration-700",
+            isIdle ? "opacity-0 pointer-events-none" : "opacity-100"
+          )}>
+            <AmbientMixer pageMode active={hasStarted} paused={ambientPaused} audio={audio} musicStyle={style} musicPaused={musicPaused} />
+          </div>
         </div>
       </main>
 

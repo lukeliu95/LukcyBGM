@@ -2,14 +2,10 @@
 
 import { useState, useRef, useEffect } from "react";
 import { TimerStyle } from "./Timer";
-import VolumeControl from "./VolumeControl";
-import AmbientMixer from "./AmbientMixer";
 import FocusStats from "./FocusStats";
 import clsx from "clsx";
 
 interface SettingsPanelProps {
-  volume: number;
-  onVolumeChange: (v: number) => void;
   focusMinutes: number;
   sessionsCompleted: number;
   timerStyle: TimerStyle;
@@ -25,8 +21,6 @@ const TIMER_STYLES: { value: TimerStyle; label: string; icon: string }[] = [
 ];
 
 export default function SettingsPanel({
-  volume,
-  onVolumeChange,
   focusMinutes,
   sessionsCompleted,
   timerStyle,
@@ -75,14 +69,14 @@ export default function SettingsPanel({
         Settings
       </button>
 
-      {open && (
-        <div
-          className={clsx(
-            "absolute right-0 top-full mt-2 z-50 w-64",
-            "rounded-xl border border-white/[0.08] bg-black/80 backdrop-blur-xl",
-            "p-4 shadow-2xl animate-fade-in"
-          )}
-        >
+      <div
+        className={clsx(
+          "absolute right-0 top-full mt-2 z-50 w-72",
+          "rounded-xl border border-white/[0.08] bg-black/80 backdrop-blur-xl",
+          "p-4 shadow-2xl transition-all duration-200",
+          open ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
+        )}
+      >
           <div className="flex flex-col gap-4">
             {/* Timer Style */}
             <div>
@@ -108,22 +102,6 @@ export default function SettingsPanel({
               </div>
             </div>
 
-            {/* Volume */}
-            <div>
-              <p className="mb-2 text-[11px] font-medium text-gray-400 uppercase tracking-wider">
-                Volume
-              </p>
-              <VolumeControl volume={volume} onVolumeChange={onVolumeChange} />
-            </div>
-
-            {/* Ambient mixer */}
-            <div>
-              <p className="mb-2 text-[11px] font-medium text-gray-400 uppercase tracking-wider">
-                Ambient
-              </p>
-              <AmbientMixer />
-            </div>
-
             {/* Focus stats */}
             <div>
               <p className="mb-2 text-[11px] font-medium text-gray-400 uppercase tracking-wider">
@@ -136,7 +114,6 @@ export default function SettingsPanel({
             </div>
           </div>
         </div>
-      )}
     </div>
   );
 }
