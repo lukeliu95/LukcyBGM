@@ -281,26 +281,25 @@ export default function ClientApp({ styles }: ClientAppProps) {
         style={{ backgroundColor: PHASE_TINT[pomodoro.phase] }}
       />
 
-      {/* Header: logo left, settings right */}
+      {/* Header: logo centered, settings right */}
       <header
         className={clsx(
-          "relative z-10 flex items-center justify-between px-4 sm:px-6 pt-4 pb-2",
+          "relative z-10 flex items-center justify-center px-4 sm:px-6 pt-4 pb-2",
           "transition-opacity duration-700",
           isIdle ? "opacity-0 pointer-events-none" : "opacity-100"
         )}
       >
-        <div className="flex items-center">
+        <div className="rounded-full bg-white/90 px-5 py-1.5 shadow-sm">
           <Image
             src="/logoBGM.png"
             alt="LuckyBGM"
             width={200}
             height={42}
-            className="h-10 w-auto"
-            style={{ filter: "invert(1)", mixBlendMode: "screen" }}
+            className="h-8 w-auto"
             priority
           />
         </div>
-        <div className="flex items-center gap-3">
+        <div className="absolute right-4 sm:right-6 flex items-center gap-3">
           <Clock />
           <SettingsPanel
             focusMinutes={focusStats.focusMinutes}
