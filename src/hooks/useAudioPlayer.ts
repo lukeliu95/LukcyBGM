@@ -104,15 +104,17 @@ export function useAudioPlayer() {
   const setupAutoNext = useCallback((audio: HTMLAudioElement) => {
     audio.onended = () => {
       const style = styleRef.current;
-      if (!style || style.tracks.length === 0) {
-        // Loop current track
+      if (!style || style.tracks.length <= 1) {
         audio.currentTime = 0;
         audio.play().catch(() => {});
         return;
       }
-      trackIndexRef.current =
-        (trackIndexRef.current + 1) % style.tracks.length;
-      audio.src = style.tracks[trackIndexRef.current].src;
+      let nextIndex: number;
+      do {
+        nextIndex = Math.floor(Math.random() * style.tracks.length);
+      } while (nextIndex === trackIndexRef.current);
+      trackIndexRef.current = nextIndex;
+      audio.src = style.tracks[nextIndex].src;
       audio.play().catch(() => {});
     };
   }, []);
@@ -137,13 +139,14 @@ export function useAudioPlayer() {
   const play = useCallback(
     (style: MusicStyle) => {
       styleRef.current = style;
-      trackIndexRef.current = 0;
+      const startIndex = Math.floor(Math.random() * style.tracks.length);
+      trackIndexRef.current = startIndex;
 
       const audio = getActive();
       if (!audio || style.tracks.length === 0) return;
 
       clearFadeTimers();
-      audio.src = style.tracks[0].src;
+      audio.src = style.tracks[startIndex].src;
       audio.currentTime = 0;
       setupAutoNext(audio);
       fadeIn(audio, volumeRef.current);

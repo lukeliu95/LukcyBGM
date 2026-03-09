@@ -287,7 +287,9 @@ export default function ClientApp({ styles }: ClientAppProps) {
 
       {/* Main: timer centered */}
       <main className="flex flex-1 flex-col items-center justify-center px-4 pb-8">
-        <div className="flex w-full max-w-lg flex-col items-center rounded-3xl bg-black/30 backdrop-blur-sm py-8 px-6">
+        <div className="group relative flex w-full max-w-lg flex-col items-center rounded-3xl py-8 px-6">
+          {/* Hover overlay */}
+          <div className="absolute inset-0 rounded-3xl bg-black/30 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
           {!hasStarted ? (
             <div className="flex flex-col items-center gap-6 animate-fade-in">
               {/* spacer */}
